@@ -6,6 +6,23 @@
 export type TournamentType = 'ida' | 'ida_vuelta';
 export type TournamentStatus = 'setup' | 'active' | 'final_phase' | 'finished';
 
+export interface KnockoutMatch {
+  id: string;
+  homePlayer: string;
+  awayPlayer: string; // can be 'BYE' for "Pase libre"
+  homeTeam: string;
+  awayTeam: string;
+  homeGoals: number | null;
+  awayGoals: number | null;
+  played: boolean;
+  penaltyWinner?: string | null;
+}
+
+export interface KnockoutRound {
+  name: string; // e.g., "Octavos de Final", "Cuartos", "Semifinal", "Final"
+  matches: KnockoutMatch[];
+}
+
 export interface Match {
   id: string;
   round: number;
@@ -38,6 +55,8 @@ export interface Tournament {
   teams: Record<string, string>; // player -> team name
   matches: Match[];
   finalPhase: FinalPhase | null;
+  knockoutRounds?: KnockoutRound[] | null;
+  mode?: 'liga' | 'eliminatoria';
   createdAt: string;
 }
 

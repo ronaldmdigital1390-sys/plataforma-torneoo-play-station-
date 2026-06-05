@@ -25,7 +25,9 @@ import { Tournament, Match, ChampionRecord, PlayerStats } from './types';
 import { 
   generateFixture, 
   calculateStandings, 
-  calculateTournamentStats 
+  calculateTournamentStats,
+  generateKnockoutRounds,
+  generateNextKnockoutRound
 } from './utils';
 
 import TournamentSetup from './components/TournamentSetup';
@@ -34,6 +36,7 @@ import MatchList from './components/MatchList';
 import StatsPanel from './components/StatsPanel';
 import FinalPhaseBracket from './components/FinalPhaseBracket';
 import ChampionPodium from './components/ChampionPodium';
+import KnockoutBracket from './components/KnockoutBracket';
 
 export default function App() {
   // Load initial states from LocalStorage
@@ -113,22 +116,44 @@ export default function App() {
     name: string,
     players: string[],
     teams: Record<string, string>,
-    type: 'ida' | 'ida_vuelta'
+    type: 'ida' | 'ida_vuelta',
+    mode: 'liga' | 'eliminatoria' = 'liga'
   ) => {
-    const freshMatches = generateFixture(players, teams, type);
-    const freshTournament: Tournament = {
-      id: `tournament-${Date.now()}`,
-      name,
-      type,
-      status: 'active',
-      players,
-      teams,
-      matches: freshMatches,
-      finalPhase: null,
-      createdAt: new Date().toISOString(),
-    };
-    setTournament(freshTournament);
-    setActiveTab('positions');
+    if (mode === 'eliminatoria') {
+      const koRounds = generateKnockoutRounds(players, teams);
+      const freshTournament: Tournament = {
+        id: `tournament-${Date.now()}`,
+        name,
+        type,
+        mode,
+        status: 'active',
+        players,
+        teams,
+        matches: [],
+        finalPhase: null,
+        knockoutRounds: koRounds,
+        createdAt: new Date().toISOString(),
+      };
+      setTournament(freshTournament);
+      setActiveTab('playoffs');
+    } else {
+      const freshMatches = generateFixture(players, teams, type);
+      const freshTournament: Tournament = {
+        id: `tournament-${Date.now()}`,
+        name,
+        type,
+        mode,
+        status: 'active',
+        players,
+        teams,
+        matches: freshMatches,
+        finalPhase: null,
+        knockoutRounds: null,
+        createdAt: new Date().toISOString(),
+      };
+      setTournament(freshTournament);
+      setActiveTab('positions');
+    }
   };
 
   // Update standing scores of regular round robin matches
@@ -337,27 +362,116 @@ export default function App() {
     });
   };
 
+  const handleUpdateKnockoutScore = (
+    roundIndex: number,
+    matchId: string,
+    homeGoals: number,
+    awayGoals: number,
+    penaltyWinner: string | null
+  ) => {
+    if (!tournament || !tournament.knockoutRounds) return;
+
+    const nextRounds = [...tournament.knockoutRounds];
+    const matchRound = { ...nextRounds[roundIndex] };
+    matchRound.matches = matchRound.matches.map((m) => {
+      if (m.id === matchId) {
+        return {
+          ...m,
+          homeGoals,
+          awayGoals,
+          played: true,
+          penaltyWinner,
+        };
+      }
+      return m;
+    });
+    nextRounds[roundIndex] = matchRound;
+
+    setTournament({
+      ...tournament,
+      knockoutRounds: nextRounds,
+    });
+  };
+
+  const handleAdvanceKnockoutRound = () => {
+    if (!tournament || !tournament.knockoutRounds) return;
+
+    const currentR = tournament.knockoutRounds[tournament.knockoutRounds.length - 1];
+    const nextR = generateNextKnockoutRound(currentR, tournament.teams);
+
+    setTournament({
+      ...tournament,
+      knockoutRounds: [...tournament.knockoutRounds, nextR],
+    });
+  };
+
+  const handleFinishKnockout = (champion: string, subchampion: string) => {
+    if (!tournament) return;
+
+    const championTeam = tournament.teams[champion] || 'Club';
+
+    const newRecord: ChampionRecord = {
+      id: `record-${Date.now()}`,
+      tournamentName: tournament.name,
+      champion,
+      championTeam,
+      subchampion: subchampion || '',
+      date: new Date().toISOString(),
+    };
+
+    setRecords((prev) => [newRecord, ...prev]);
+    setTournament({
+      ...tournament,
+      status: 'finished',
+      finalPhase: {
+        semis: [],
+        finalMatch: null,
+        champion,
+        subchampion,
+      },
+    });
+  };
+
   // Nueva Temporada: Restart keeping same players & teams selected
   const handleNewSeason = () => {
     if (!tournament) return;
 
-    const { players, teams, name, type } = tournament;
-    const freshMatches = generateFixture(players, teams, type);
-
-    const nextTournament: Tournament = {
-      id: `tournament-${Date.now()}`,
-      name,
-      type,
-      status: 'active',
-      players,
-      teams,
-      matches: freshMatches,
-      finalPhase: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    setTournament(nextTournament);
-    setActiveTab('positions');
+    const { players, teams, name, type, mode } = tournament;
+    if (mode === 'eliminatoria') {
+      const koRounds = generateKnockoutRounds(players, teams);
+      const nextTournament: Tournament = {
+        id: `tournament-${Date.now()}`,
+        name,
+        type,
+        mode,
+        status: 'active',
+        players,
+        teams,
+        matches: [],
+        finalPhase: null,
+        knockoutRounds: koRounds,
+        createdAt: new Date().toISOString(),
+      };
+      setTournament(nextTournament);
+      setActiveTab('playoffs');
+    } else {
+      const freshMatches = generateFixture(players, teams, type);
+      const nextTournament: Tournament = {
+        id: `tournament-${Date.now()}`,
+        name,
+        type,
+        mode: 'liga',
+        status: 'active',
+        players,
+        teams,
+        matches: freshMatches,
+        finalPhase: null,
+        knockoutRounds: null,
+        createdAt: new Date().toISOString(),
+      };
+      setTournament(nextTournament);
+      setActiveTab('positions');
+    }
   };
 
   // Completely reset and return to base setup panel maintaining core config
@@ -520,6 +634,7 @@ export default function App() {
             initialPlayers={tournament?.players}
             initialTeams={tournament?.teams}
             initialType={tournament?.type}
+            initialMode={tournament?.mode}
             onClearAll={handleClearAll}
           />
         ) : tournament.status === 'finished' ? (
@@ -544,22 +659,24 @@ export default function App() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="font-display font-black text-lg sm:text-xl tracking-tight text-white flex items-center gap-1.5 flex-wrap">
-                    {tournament.name} <span className="text-[9px] bg-green-500/15 border border-green-500/30 text-green-400 font-mono font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">LIGA</span>
+                    {tournament.name} <span className="text-[9px] bg-green-500/15 border border-green-500/30 text-green-400 font-mono font-bold px-1.5 py-0.5 rounded-full uppercase tracking-wider">{tournament.mode === 'eliminatoria' ? 'ELIMINATORIA' : 'LIGA'}</span>
                   </h1>
                   <p className="text-[9px] sm:text-[10px] text-slate-400 font-mono uppercase tracking-widest leading-none mt-0.5">
-                    Modo: {tournament.type === 'ida' ? 'Ida Única' : 'Ida y Vuelta'}
+                    Modo: {tournament.mode === 'eliminatoria' ? 'Eliminatoria Directa' : tournament.type === 'ida' ? 'Ida Única' : 'Ida y Vuelta'}
                   </p>
                 </div>
               </div>
 
               {/* Share & reset utilities */}
               <div className="flex items-center flex-wrap md:flex-nowrap gap-2 shrink-0 w-full md:w-auto justify-end relative z-10">
-                <button
-                  onClick={handleShareWhatsAppPositions}
-                  className="flex-1 md:flex-none justify-center bg-green-600 hover:bg-green-500 text-white font-mono text-[10px] font-bold px-3 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all hover:scale-[1.01] active:scale-95 shadow-[0_4px_10px_rgba(34,197,94,0.15)]"
-                >
-                  <Share2 className="w-3.5 h-3.5" /> Compartir Tabla
-                </button>
+                {tournament.mode !== 'eliminatoria' && (
+                  <button
+                    onClick={handleShareWhatsAppPositions}
+                    className="flex-1 md:flex-none justify-center bg-green-600 hover:bg-green-500 text-white font-mono text-[10px] font-bold px-3 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all hover:scale-[1.01] active:scale-95 shadow-[0_4px_10px_rgba(34,197,94,0.15)]"
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Compartir Tabla
+                  </button>
+                )}
                 <button
                   onClick={handleResetAll}
                   className="flex-1 md:flex-none justify-center bg-slate-950 hover:bg-slate-900 border border-slate-850 hover:text-red-400 text-slate-400 font-mono text-[10px] px-3 py-2 rounded-xl flex items-center gap-1 cursor-pointer transition-all active:scale-95"
@@ -639,38 +756,42 @@ export default function App() {
 
             {/* Main view content routing tabs */}
             <div className="flex items-center gap-1 bg-slate-950/80 border border-green-500/10 rounded-2xl p-1.5 mb-6 overflow-x-auto no-scrollbar shadow-inner">
-              <button
-                onClick={() => setActiveTab('positions')}
-                className={`flex-1 shrink-0 text-center font-display font-black py-3 px-4 rounded-xl text-xs tracking-wider transition-all duration-200 cursor-pointer ${
-                  activeTab === 'positions'
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-900/40 border border-green-400/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
-                }`}
-              >
-                TABLA
-              </button>
-              <button
-                onClick={() => setActiveTab('matches')}
-                className={`flex-1 shrink-0 text-center font-display font-black py-3 px-4 rounded-xl text-xs tracking-wider transition-all duration-200 cursor-pointer ${
-                  activeTab === 'matches'
-                    ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-900/40 border border-green-400/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
-                }`}
-              >
-                PARTIDOS
-              </button>
+              {tournament.mode !== 'eliminatoria' && (
+                <>
+                  <button
+                    onClick={() => setActiveTab('positions')}
+                    className={`flex-1 shrink-0 text-center font-display font-black py-3 px-4 rounded-xl text-xs tracking-wider transition-all duration-200 cursor-pointer ${
+                      activeTab === 'positions'
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-900/40 border border-green-400/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+                    }`}
+                  >
+                    TABLA
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('matches')}
+                    className={`flex-1 shrink-0 text-center font-display font-black py-3 px-4 rounded-xl text-xs tracking-wider transition-all duration-200 cursor-pointer ${
+                      activeTab === 'matches'
+                        ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-900/40 border border-green-400/30'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
+                    }`}
+                  >
+                    PARTIDOS
+                  </button>
+                </>
+              )}
               <button
                 onClick={() => setActiveTab('playoffs')}
                 className={`flex-1 shrink-0 text-center font-display font-black py-3 px-4 rounded-xl text-xs tracking-wider transition-all duration-200 cursor-pointer relative ${
                   activeTab === 'playoffs'
                     ? 'bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-900/40 border border-green-400/30'
-                    : tournament.status === 'final_phase' || isLeagueCompleted
+                    : tournament.status === 'final_phase' || (tournament.mode !== 'eliminatoria' && isLeagueCompleted)
                     ? 'text-yellow-400 font-extrabold bg-amber-500/10 border border-amber-500/20 animate-pulse'
                     : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/30'
                 }`}
               >
-                PLAYOFFS
-                {(tournament.status === 'final_phase' || isLeagueCompleted) && (
+                {tournament.mode === 'eliminatoria' ? 'ELIMINATORIA' : 'PLAYOFFS'}
+                {tournament.mode !== 'eliminatoria' && (tournament.status === 'final_phase' || isLeagueCompleted) && (
                   <span className="absolute top-2 right-2 w-2 h-2 bg-yellow-400 rounded-full animate-ping" />
                 )}
               </button>
@@ -695,7 +816,7 @@ export default function App() {
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
               >
-                {activeTab === 'positions' && (
+                {tournament.mode !== 'eliminatoria' && activeTab === 'positions' && (
                   <div className="space-y-6">
                     <StandingsTable standings={standings} playersCount={tournament.players.length} />
                     
@@ -719,13 +840,20 @@ export default function App() {
                   </div>
                 )}
 
-                {activeTab === 'matches' && (
+                {tournament.mode !== 'eliminatoria' && activeTab === 'matches' && (
                   <MatchList matches={tournament.matches} onUpdateScore={handleUpdateScore} />
                 )}
 
                 {activeTab === 'playoffs' && (
                   <div>
-                    {tournament.status !== 'final_phase' && !isLeagueCompleted ? (
+                    {tournament.mode === 'eliminatoria' ? (
+                      <KnockoutBracket
+                        tournament={tournament}
+                        onUpdateKnockoutScore={handleUpdateKnockoutScore}
+                        onAdvanceRound={handleAdvanceKnockoutRound}
+                        onFinishKnockout={handleFinishKnockout}
+                      />
+                    ) : tournament.status !== 'final_phase' && !isLeagueCompleted ? (
                       <div className="glow-card rounded-2xl p-10 text-center border border-dashed border-slate-800">
                         <Trophy className="w-12 h-12 text-slate-700 mx-auto mb-3" />
                         <h3 className="font-display font-black text-white text-base">Playoffs bloqueados</h3>

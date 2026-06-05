@@ -23,11 +23,18 @@ import {
 } from 'lucide-react';
 
 interface TournamentSetupProps {
-  onStartTournament: (name: string, players: string[], teams: Record<string, string>, type: 'ida' | 'ida_vuelta') => void;
+  onStartTournament: (
+    name: string,
+    players: string[],
+    teams: Record<string, string>,
+    type: 'ida' | 'ida_vuelta',
+    mode: 'liga' | 'eliminatoria'
+  ) => void;
   initialName?: string;
   initialPlayers?: string[];
   initialTeams?: Record<string, string>;
   initialType?: 'ida' | 'ida_vuelta';
+  initialMode?: 'liga' | 'eliminatoria';
   key?: string | number;
   onClearAll?: (bypassConfirm?: boolean) => void;
 }
@@ -38,6 +45,7 @@ export default function TournamentSetup({
   initialPlayers,
   initialTeams,
   initialType,
+  initialMode,
   onClearAll
 }: TournamentSetupProps) {
   // --- STATE PERSISTENCE IN LOCAL STORAGE ---
@@ -51,6 +59,12 @@ export default function TournamentSetup({
     const saved = localStorage.getItem('copa_family_setup_type');
     if (saved === 'ida' || saved === 'ida_vuelta') return saved as 'ida' | 'ida_vuelta';
     return initialType ?? 'ida';
+  });
+
+  const [tournamentMode, setTournamentMode] = useState<'liga' | 'eliminatoria'>(() => {
+    const saved = localStorage.getItem('copa_family_setup_mode');
+    if (saved === 'liga' || saved === 'eliminatoria') return saved as 'liga' | 'eliminatoria';
+    return initialMode ?? 'liga';
   });
 
   const [players, setPlayers] = useState<string[]>(() => {
@@ -84,6 +98,11 @@ export default function TournamentSetup({
     if (isClearing || (window as any).__isClearingApp) return;
     localStorage.setItem('copa_family_setup_type', tournamentType);
   }, [tournamentType, isClearing]);
+
+  useEffect(() => {
+    if (isClearing || (window as any).__isClearingApp) return;
+    localStorage.setItem('copa_family_setup_mode', tournamentMode);
+  }, [tournamentMode, isClearing]);
 
   useEffect(() => {
     if (isClearing || (window as any).__isClearingApp) return;
@@ -358,7 +377,7 @@ export default function TournamentSetup({
       return;
     }
 
-    onStartTournament(tournamentName.trim(), players, raffleResults, tournamentType);
+    onStartTournament(tournamentName.trim(), players, raffleResults, tournamentType, tournamentMode);
   };
 
   return (
@@ -782,33 +801,65 @@ export default function TournamentSetup({
 
                 <div>
                   <label className="block text-[9px] font-mono text-slate-500 uppercase tracking-widest mb-1.5 leading-none">
-                    Formato de la Jornada
+                    Modo del Torneo
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
-                      onClick={() => setTournamentType('ida')}
-                      className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[11px] font-black uppercase tracking-wider ${
-                        tournamentType === 'ida'
+                      onClick={() => setTournamentMode('liga')}
+                      className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[10px] font-black uppercase tracking-wider ${
+                        tournamentMode === 'liga'
                           ? 'bg-green-600/10 border-green-500 text-white font-black'
-                          : 'bg-slate-950/60 border-slate-900 text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                          : 'bg-slate-950/60 border-slate-900 text-slate-400 hover:bg-slate-900 hover:text-slate-300'
                       }`}
                     >
-                      Ida Única
+                      🏆 Liga + Fase Final
                     </button>
                     <button
                       type="button"
-                      onClick={() => setTournamentType('ida_vuelta')}
-                      className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[11px] font-black uppercase tracking-wider ${
-                        tournamentType === 'ida_vuelta'
-                          ? 'bg-blue-600/10 border-blue-500 text-white font-black'
-                          : 'bg-slate-950/60 border-slate-900 text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                      onClick={() => setTournamentMode('eliminatoria')}
+                      className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[10px] font-black uppercase tracking-wider ${
+                        tournamentMode === 'eliminatoria'
+                          ? 'bg-orange-600/10 border-orange-500 text-white font-black'
+                          : 'bg-slate-950/60 border-slate-900 text-slate-400 hover:bg-slate-900 hover:text-slate-300'
                       }`}
                     >
-                      Ida y Vuelta
+                      🔥 Eliminatoria Directa
                     </button>
                   </div>
                 </div>
+
+                {tournamentMode === 'liga' && (
+                  <div className="space-y-1.5">
+                    <label className="block text-[9px] font-mono text-slate-500 uppercase tracking-widest leading-none">
+                      Formato de la Jornada
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTournamentType('ida')}
+                        className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[11px] font-black uppercase tracking-wider ${
+                          tournamentType === 'ida'
+                            ? 'bg-green-600/10 border-green-500 text-white font-black'
+                            : 'bg-slate-950/60 border-slate-900 text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                        }`}
+                      >
+                        Ida Única
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTournamentType('ida_vuelta')}
+                        className={`py-2 px-3 rounded-lg border text-center transition-all cursor-pointer font-display text-[11px] font-black uppercase tracking-wider ${
+                          tournamentType === 'ida_vuelta'
+                            ? 'bg-blue-600/10 border-blue-500 text-white font-black'
+                            : 'bg-slate-950/60 border-slate-900 text-slate-500 hover:bg-slate-900 hover:text-slate-300'
+                        }`}
+                      >
+                        Ida y Vuelta
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Tournament submission actions */}

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Match, PlayerStats, TournamentStats, TournamentType } from './types';
+import { Match, PlayerStats, TournamentStats, TournamentType, KnockoutMatch, KnockoutRound } from './types';
 
 /**
  * Generates fixture round-robin scheduling (Berger system)
@@ -237,5 +237,144 @@ export function calculateTournamentStats(matches: Match[], teams: Record<string,
     bestDg,
     biggestWin,
     mostGoalsMatch,
+  };
+}
+
+export function shuffleArray<T>(array: T[]): T[] {
+  const arr = [...array];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+export function generateKnockoutRounds(players: string[], teams: Record<string, string>): KnockoutRound[] {
+  const shuffled = shuffleArray(players);
+  const n = shuffled.length;
+  
+  let roundName = '';
+  if (n > 8) {
+    roundName = 'Octavos de Final';
+  } else if (n > 4) {
+    roundName = 'Cuartos de Final';
+  } else if (n > 2) {
+    roundName = 'Semifinales';
+  } else {
+    roundName = 'Gran Final';
+  }
+
+  const matches: KnockoutMatch[] = [];
+  let matchIdCounter = 1;
+
+  const isOdd = n % 2 !== 0;
+  const numPairs = Math.floor(n / 2);
+
+  for (let i = 0; i < numPairs; i++) {
+    const home = shuffled[i * 2];
+    const away = shuffled[i * 2 + 1];
+    matches.push({
+      id: `ko-match-${Date.now()}-${matchIdCounter++}`,
+      homePlayer: home,
+      awayPlayer: away,
+      homeTeam: teams[home] || 'Club',
+      awayTeam: teams[away] || 'Club',
+      homeGoals: null,
+      awayGoals: null,
+      played: false,
+    });
+  }
+
+  if (isOdd) {
+    const luckyPlayer = shuffled[n - 1];
+    matches.push({
+      id: `ko-match-${Date.now()}-${matchIdCounter++}`,
+      homePlayer: luckyPlayer,
+      awayPlayer: 'BYE',
+      homeTeam: teams[luckyPlayer] || 'Club',
+      awayTeam: 'Pase Libre',
+      homeGoals: null,
+      awayGoals: null,
+      played: true, // already advanced
+    });
+  }
+
+  return [{
+    name: roundName,
+    matches,
+  }];
+}
+
+export function generateNextKnockoutRound(currentRound: KnockoutRound, teams: Record<string, string>): KnockoutRound {
+  const winners: string[] = [];
+  
+  currentRound.matches.forEach((m) => {
+    if (m.awayPlayer === 'BYE') {
+      winners.push(m.homePlayer);
+    } else {
+      const hg = m.homeGoals ?? 0;
+      const ag = m.awayGoals ?? 0;
+      if (hg > ag) {
+        winners.push(m.homePlayer);
+      } else if (hg < ag) {
+        winners.push(m.awayPlayer);
+      } else {
+        winners.push(m.penaltyWinner || m.homePlayer);
+      }
+    }
+  });
+
+  const n = winners.length;
+  let roundName = '';
+  if (n > 8) {
+    roundName = 'Octavos de Final';
+  } else if (n > 4) {
+    roundName = 'Cuartos de Final';
+  } else if (n > 2) {
+    roundName = 'Semifinales';
+  } else if (n === 2) {
+    roundName = 'Gran Final';
+  } else {
+    roundName = 'Campeón Definido';
+  }
+
+  const matches: KnockoutMatch[] = [];
+  let matchIdCounter = 1;
+
+  const isOdd = n % 2 !== 0;
+  const numPairs = Math.floor(n / 2);
+
+  for (let i = 0; i < numPairs; i++) {
+    const home = winners[i * 2];
+    const away = winners[i * 2 + 1];
+    matches.push({
+      id: `ko-match-${Date.now()}-${matchIdCounter++}`,
+      homePlayer: home,
+      awayPlayer: away,
+      homeTeam: teams[home] || 'Club',
+      awayTeam: teams[away] || 'Club',
+      homeGoals: null,
+      awayGoals: null,
+      played: false,
+    });
+  }
+
+  if (isOdd) {
+    const luckyPlayer = winners[n - 1];
+    matches.push({
+      id: `ko-match-${Date.now()}-${matchIdCounter++}`,
+      homePlayer: luckyPlayer,
+      awayPlayer: 'BYE',
+      homeTeam: teams[luckyPlayer] || 'Club',
+      awayTeam: 'Pase Libre',
+      homeGoals: null,
+      awayGoals: null,
+      played: true, // already advanced
+    });
+  }
+
+  return {
+    name: roundName,
+    matches,
   };
 }
