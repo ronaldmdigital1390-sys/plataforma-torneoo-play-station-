@@ -27,22 +27,63 @@ export default function FinalPhaseBracket({
     Record<number, { home: string; away: string; penaltyWinner: string | null }>
   >({
     0: {
-      home: semis[0]?.homeGoals !== null ? String(semis[0].homeGoals) : '',
-      away: semis[0]?.awayGoals !== null ? String(semis[0].awayGoals) : '',
+      home: semis[0]?.homeGoals !== null && semis[0]?.homeGoals !== undefined ? String(semis[0].homeGoals) : '',
+      away: semis[0]?.awayGoals !== null && semis[0]?.awayGoals !== undefined ? String(semis[0].awayGoals) : '',
       penaltyWinner: semis[0]?.penaltyWinner || null,
     },
     1: {
-      home: semis[1]?.homeGoals !== null ? String(semis[1].homeGoals) : '',
-      away: semis[1]?.awayGoals !== null ? String(semis[1].awayGoals) : '',
+      home: semis[1]?.homeGoals !== null && semis[1]?.homeGoals !== undefined ? String(semis[1].homeGoals) : '',
+      away: semis[1]?.awayGoals !== null && semis[1]?.awayGoals !== undefined ? String(semis[1].awayGoals) : '',
       penaltyWinner: semis[1]?.penaltyWinner || null,
     },
   });
 
   const [finalScore, setFinalScore] = useState<{ home: string; away: string; penaltyWinner: string | null }>({
-    home: finalMatch?.homeGoals !== null ? String(finalMatch?.homeGoals) : '',
-    away: finalMatch?.awayGoals !== null ? String(finalMatch?.awayGoals) : '',
+    home: finalMatch?.homeGoals !== null && finalMatch?.homeGoals !== undefined ? String(finalMatch.homeGoals) : '',
+    away: finalMatch?.awayGoals !== null && finalMatch?.awayGoals !== undefined ? String(finalMatch.awayGoals) : '',
     penaltyWinner: finalMatch?.penaltyWinner || null,
   });
+
+  // Sync states when matches are generated or updated externally
+  React.useEffect(() => {
+    setSemiScores({
+      0: {
+        home: semis[0]?.homeGoals !== null && semis[0]?.homeGoals !== undefined ? String(semis[0].homeGoals) : '',
+        away: semis[0]?.awayGoals !== null && semis[0]?.awayGoals !== undefined ? String(semis[0].awayGoals) : '',
+        penaltyWinner: semis[0]?.penaltyWinner || null,
+      },
+      1: {
+        home: semis[1]?.homeGoals !== null && semis[1]?.homeGoals !== undefined ? String(semis[1].homeGoals) : '',
+        away: semis[1]?.awayGoals !== null && semis[1]?.awayGoals !== undefined ? String(semis[1].awayGoals) : '',
+        penaltyWinner: semis[1]?.penaltyWinner || null,
+      },
+    });
+  }, [
+    semis[0]?.homePlayer,
+    semis[0]?.awayPlayer,
+    semis[0]?.homeGoals,
+    semis[0]?.awayGoals,
+    semis[0]?.penaltyWinner,
+    semis[1]?.homePlayer,
+    semis[1]?.awayPlayer,
+    semis[1]?.homeGoals,
+    semis[1]?.awayGoals,
+    semis[1]?.penaltyWinner,
+  ]);
+
+  React.useEffect(() => {
+    setFinalScore({
+      home: finalMatch?.homeGoals !== null && finalMatch?.homeGoals !== undefined ? String(finalMatch.homeGoals) : '',
+      away: finalMatch?.awayGoals !== null && finalMatch?.awayGoals !== undefined ? String(finalMatch.awayGoals) : '',
+      penaltyWinner: finalMatch?.penaltyWinner || null,
+    });
+  }, [
+    finalMatch?.homePlayer,
+    finalMatch?.awayPlayer,
+    finalMatch?.homeGoals,
+    finalMatch?.awayGoals,
+    finalMatch?.penaltyWinner,
+  ]);
 
   const handleSemiScoreChange = (index: number, side: 'home' | 'away', val: string) => {
     const clean = val.replace(/\D/g, '');
