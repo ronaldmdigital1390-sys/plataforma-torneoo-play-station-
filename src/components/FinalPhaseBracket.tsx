@@ -315,8 +315,8 @@ export default function FinalPhaseBracket({
               </p>
             </div>
           ) : finalMatch ? (
-            <div className="glow-card rounded-xl p-5 border border-yellow-500/10 border-t-2 border-t-brand-gold relative shadow-[0_4px_30px_rgba(245,158,11,0.15)] bg-slate-950/80">
-              <div className="absolute top-0 right-0 p-3 opacity-10 text-yellow-400">
+            <div className="glow-card rounded-xl p-5 border border-yellow-500/10 border-t-2 border-t-brand-gold relative shadow-[0_4px_30px_rgba(245,158,11,0.15)] bg-slate-950/80" id="grand-final-box">
+              <div className="absolute top-0 right-0 p-3 opacity-10 text-yellow-400 pointer-events-none">
                 <Trophy className="w-16 h-16 gold-glow" />
               </div>
               
@@ -339,7 +339,7 @@ export default function FinalPhaseBracket({
                     value={finalScore.home}
                     disabled={finalMatch.played}
                     onChange={(e) => handleFinalScoreChange('home', e.target.value)}
-                    className="w-11 h-10 bg-slate-900 border border-slate-700 text-center text-base font-bold font-mono text-white rounded-lg focus:border-yellow-500"
+                    className="w-11 h-10 bg-slate-900 border border-slate-700 text-center text-base font-bold font-mono text-white rounded-lg focus:border-yellow-500 disabled:opacity-60"
                   />
                 </div>
 
@@ -363,7 +363,7 @@ export default function FinalPhaseBracket({
                     value={finalScore.away}
                     disabled={finalMatch.played}
                     onChange={(e) => handleFinalScoreChange('away', e.target.value)}
-                    className="w-11 h-10 bg-slate-900 border border-slate-700 text-center text-base font-bold font-mono text-white rounded-lg focus:border-yellow-500"
+                    className="w-11 h-10 bg-slate-900 border border-slate-700 text-center text-base font-bold font-mono text-white rounded-lg focus:border-yellow-500 disabled:opacity-60"
                   />
                 </div>
 
@@ -371,7 +371,7 @@ export default function FinalPhaseBracket({
                 {finalScore.home !== '' && finalScore.away !== '' && parseInt(finalScore.home, 10) === parseInt(finalScore.away, 10) && (
                   <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-lg p-2.5 mt-2">
                     <p className="text-[10px] font-mono text-yellow-400 font-bold uppercase tracking-wider text-center mb-2">
-                      🎯 Definido por Penaltis: ¿Quién salió Campeón?
+                      🎯 En caso de empate, define el ganador por penales y selecciona manualmente al campeón.
                     </p>
                     <div className="grid grid-cols-2 gap-2">
                       <button
@@ -407,21 +407,37 @@ export default function FinalPhaseBracket({
                   <button
                     type="button"
                     onClick={handleSaveFinal}
-                    className="w-full mt-3 py-3.5 bg-gradient-to-r from-yellow-500 to-amber-600 hover:from-yellow-400 hover:to-amber-500 text-slate-950 font-display font-extrabold text-xs uppercase tracking-widest rounded-xl flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-[0.98] shadow-md shadow-yellow-900/30 font-black"
+                    className="w-full mt-3 py-2.5 bg-green-600 hover:bg-green-500 text-white font-mono font-bold text-xs uppercase tracking-wider rounded-lg flex items-center justify-center gap-1 cursor-pointer transition-all active:scale-[0.98]"
                   >
-                    <Trophy className="w-4 h-4" /> REGISTRAR CAMPEÓN DE LA COPA
+                    <Check className="w-4 h-4" /> Registrar Marcador de la Final
                   </button>
                 ) : (
-                  <div className="space-y-4 mt-4">
-                    <div className="text-center font-display font-extrabold text-lg text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 p-2.5 rounded-xl">
-                      🎉 ¡FINALIZADO CON ÉXITO! 🎉
+                  <div className="space-y-4 mt-4 pt-4 border-t border-slate-800">
+                    <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-lg space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-slate-500 uppercase">Campeón:</span>
+                        <span className="font-display font-black text-yellow-400 text-sm flex items-center gap-1">
+                          🏆 {champion} <span className="text-[10px] font-mono text-slate-400">({champion === finalMatch.homePlayer ? finalMatch.homeTeam : finalMatch.awayTeam})</span>
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono text-slate-500 uppercase">Subcampeón:</span>
+                        <span className="font-display font-extrabold text-slate-300">
+                          🥈 {finalPhase.subchampion} <span className="text-[10px] font-mono text-slate-500">({finalPhase.subchampion === finalMatch.homePlayer ? finalMatch.homeTeam : finalMatch.awayTeam})</span>
+                        </span>
+                      </div>
                     </div>
+
+                    <div className="text-center font-display font-extrabold text-xs text-emerald-400 bg-emerald-950/20 border border-emerald-900/30 p-2.5 rounded-xl">
+                      🎉 Marcador Registrado con Éxito 🎉
+                    </div>
+
                     <button
                       type="button"
                       onClick={onFinishTournament}
-                      className="w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 text-slate-950 font-display font-black text-sm tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-[0_4px_25px_rgba(251,191,36,0.3)] hover:scale-[1.01] active:scale-95 text-center flex items-center justify-center gap-2 border border-yellow-300"
+                      className="w-full py-4 bg-gradient-to-r from-yellow-400 via-amber-500 to-yellow-500 text-slate-950 font-display font-black text-sm tracking-widest uppercase rounded-xl transition-all cursor-pointer shadow-[0_4px_25px_rgba(251,191,36,0.3)] hover:scale-[1.01] active:scale-95 text-center flex items-center justify-center gap-2 border border-yellow-300 font-extrabold"
                     >
-                      <Trophy className="w-5 h-5 fill-current" /> IR A PANTALLA DE CAMPEÓN ÉPICA
+                      <Trophy className="w-5 h-5 fill-current animate-bounce" /> REGISTRAR CAMPEÓN DE LA COPA
                     </button>
                   </div>
                 )}
