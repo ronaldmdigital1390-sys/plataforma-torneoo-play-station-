@@ -1,0 +1,6 @@
+{
+  "name": "Copa Family 2026",
+  "description": "Aplicación premium de torneos gamer PlayStation con fixture, tablas, estadísticas y fase final.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

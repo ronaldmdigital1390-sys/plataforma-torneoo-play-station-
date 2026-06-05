@@ -1,0 +1,221 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-dark: #030712;
+  --color-brand-darker: #01020a;
+  --color-brand-blue: #081135;
+  --color-brand-electric: #1e40af;
+  --color-brand-red: #dc2626;
+  --color-brand-green: #22c55e;
+  --color-brand-celeste: #06b6d4;
+  --color-brand-gold: #f59e0b;
+}
+
+/* Stadium nocturno background layout - World Cup 2026 style */
+.stadium-bg {
+  background-color: #030712;
+  background-image: 
+    radial-gradient(circle at 50% -10%, rgba(34, 197, 94, 0.18) 0%, rgba(30, 64, 175, 0.15) 45%, rgba(1, 2, 10, 1) 95%),
+    radial-gradient(circle at 100% 15%, rgba(220, 38, 38, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 0% 15%, rgba(34, 197, 94, 0.08) 0%, transparent 50%);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Subtle digital gaming grid lines pattern */
+.gaming-grid {
+  position: absolute;
+  inset: 0;
+  background-size: 30px 30px;
+  background-image: 
+    linear-gradient(to right, rgba(34, 197, 94, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34, 197, 94, 0.015) 1px, transparent 1px);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Epic Stadium floodlight flare cones: Green, White/Gold and Red representing cohosts */
+.stadium-light-left {
+  position: absolute;
+  top: -80px;
+  left: -50px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle at 0% 0%, rgba(34, 197, 94, 0.22) 0%, rgba(30, 64, 175, 0.05) 50%, transparent 80%);
+  pointer-events: none;
+  filter: blur(50px);
+  z-index: 2;
+}
+
+.stadium-light-right {
+  position: absolute;
+  top: -80px;
+  right: -50px;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle at 100% 0%, rgba(220, 38, 38, 0.18) 0%, rgba(30, 64, 175, 0.03) 50%, transparent 80%);
+  pointer-events: none;
+  filter: blur(60px);
+  z-index: 2;
+}
+
+/* Subtle laser spotlights crossing behind the content */
+.laser-beam-left {
+  position: absolute;
+  top: 0;
+  left: 25%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(34, 197, 94, 0.08), transparent);
+  transform: rotate(12deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.laser-beam-right {
+  position: absolute;
+  top: 0;
+  right: 25%;
+  width: 2px;
+  height: 100%;
+  background: linear-gradient(to bottom, transparent, rgba(220, 38, 38, 0.08), transparent);
+  transform: rotate(-12deg);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Premium esport glow cards */
+.glow-card {
+  background: rgba(4, 9, 26, 0.78);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.65), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.04);
+  position: relative;
+  z-index: 10;
+}
+
+.glow-card-interactive {
+  background: rgba(6, 12, 36, 0.82);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  box-shadow: 
+    0 10px 30px rgba(0, 0, 0, 0.7), 
+    inset 0 1px 2px rgba(255, 255, 255, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-card-interactive:hover {
+  border-color: rgba(34, 197, 94, 0.35);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 15px 35px rgba(34, 197, 94, 0.1),
+    0 5px 15px rgba(0, 0, 0, 0.55),
+    inset 0 1px 2px rgba(255, 255, 255, 0.08);
+}
+
+/* Custom linear border representing cohost nation flags */
+.border-wc-dual {
+  border-image: linear-gradient(to right, #22c55e, #ffffff, #dc2626) 1;
+}
+
+/* Gold elements strictly for champion victory highlights */
+.gold-gradient {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 50%, #d97706 100%);
+}
+
+.gold-glow {
+  filter: drop-shadow(0 0 12px rgba(245, 158, 11, 0.55));
+}
+
+.gold-text-gradient {
+  background: linear-gradient(135deg, #ffffff 0%, #fbbf24 55%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hide scrollbars but preserve dynamic scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Esports gaming inputs with smooth green & red/blue neon glow transitions */
+.gaming-input {
+  background: rgba(1, 2, 8, 0.9);
+  border: 1.5px solid rgba(34, 197, 94, 0.15);
+  border-radius: 12px;
+  color: #ffffff;
+  transition: all 0.2s ease-in-out;
+}
+
+.gaming-input:focus {
+  outline: none;
+  border-color: #22c55e;
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.25);
+  background: rgba(2, 6, 20, 0.98);
+}
+
+/* Large Satisfying Sport Buttons */
+.btn-large-primary {
+  background: linear-gradient(135deg, #15803d 0%, #22c55e 50%, #10b981 100%);
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+.btn-large-primary:hover:not(:disabled) {
+  transform: translateY(-1.5px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(34, 197, 94, 0.45);
+  filter: brightness(1.1);
+}
+
+.btn-large-primary:active:not(:disabled) {
+  transform: translateY(1px);
+  filter: brightness(0.95);
+}
+
+.btn-large-secondary {
+  background: linear-gradient(135deg, #990000 0%, #dc2626 50%, #f43f5e 100%);
+  color: #ffffff;
+  font-family: "Space Grotesk", sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 20px rgba(220, 38, 38, 0.25);
+}
+
+.btn-large-secondary:hover:not(:disabled) {
+  transform: translateY(-1.5px) scale(1.01);
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.4);
+  filter: brightness(1.1);
+}
+
+.btn-large-secondary:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Custom styling for status rings and highlights */
+.status-ring-celeste {
+  border: 2px solid rgba(6, 182, 212, 0.4);
+  box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+}
+
+.active-glow {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.25);
+}
+

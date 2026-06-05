@@ -1,0 +1,18 @@
+{
+  "name": "Copa Family 2026",
+  "short_name": "CopaFamily",
+  "description": "Campeonatos de PlayStation entre familia y amigos - La gloria se juega en casa",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#030712",
+  "background_color": "#0a0f24",
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
